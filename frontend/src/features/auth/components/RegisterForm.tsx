@@ -68,6 +68,7 @@ export function RegisterForm({
             error={Boolean(errors.username)}
             helperText={errors.username}
             autoComplete="username"
+            inputProps={{ 'data-testid': 'register-username' }}
             fullWidth
           />
           <TextField
@@ -77,6 +78,7 @@ export function RegisterForm({
             error={Boolean(errors.nombreCompleto)}
             helperText={errors.nombreCompleto}
             autoComplete="name"
+            inputProps={{ 'data-testid': 'register-name' }}
             fullWidth
           />
           <TextField
@@ -87,6 +89,7 @@ export function RegisterForm({
             error={Boolean(errors.email)}
             helperText={errors.email}
             autoComplete="email"
+            inputProps={{ 'data-testid': 'register-email' }}
             fullWidth
           />
           <Box
@@ -132,6 +135,7 @@ export function RegisterForm({
                 error={Boolean(errors.telefono)}
                 helperText={errors.telefono ?? 'Ingresa solo el numero local, sin el prefijo.'}
                 autoComplete="tel"
+                inputProps={{ 'data-testid': 'register-phone' }}
                 fullWidth
               />
             </Box>
@@ -144,6 +148,7 @@ export function RegisterForm({
             error={Boolean(errors.password)}
             helperText={errors.password}
             autoComplete="new-password"
+            inputProps={{ 'data-testid': 'register-password' }}
             fullWidth
           />
           <TextField
@@ -154,6 +159,7 @@ export function RegisterForm({
             error={Boolean(errors.confirmPassword)}
             helperText={errors.confirmPassword}
             autoComplete="new-password"
+            inputProps={{ 'data-testid': 'register-confirm-password' }}
             fullWidth
           />
           <TextField

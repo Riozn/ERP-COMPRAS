@@ -64,18 +64,18 @@ describe('RegisterPage', () => {
       refreshToken: 'refresh-token',
     })
 
-    const { findByLabelText, getByLabelText, getByRole } = renderWithTheme(
+    const { findByTestId, getByTestId, getByRole } = renderWithTheme(
       <MemoryRouter initialEntries={['/register']}>
         <RegisterPage />
       </MemoryRouter>,
     )
 
-    const userField = await findByLabelText('Usuario')
-    const nameField = getByLabelText('Nombre completo')
-    const emailField = getByLabelText('Correo')
-    const phoneField = getByLabelText('Numero de WhatsApp')
-    const passwordField = getByLabelText('Contrasena')
-    const confirmField = getByLabelText('Confirmar contrasena')
+    const userField = await findByTestId('register-username')
+    const nameField = getByTestId('register-name')
+    const emailField = getByTestId('register-email')
+    const phoneField = getByTestId('register-phone')
+    const passwordField = getByTestId('register-password')
+    const confirmField = getByTestId('register-confirm-password')
 
     await user.type(userField, 'admin')
     await user.type(nameField, 'Admin ERP')
@@ -110,17 +110,17 @@ describe('RegisterPage', () => {
       roles: [{ id: 1, codigo: 'ADMIN', nombre: 'Administrador' }],
     })
 
-    const { findByLabelText, getByLabelText, getByRole, findByText } = renderWithTheme(
+    const { findByTestId, getByTestId, getByRole, findByText } = renderWithTheme(
       <MemoryRouter initialEntries={['/register']}>
         <RegisterPage />
       </MemoryRouter>,
     )
 
-    const userField = await findByLabelText('Usuario')
-    const nameField = getByLabelText('Nombre completo')
-    const emailField = getByLabelText('Correo')
-    const passwordField = getByLabelText('Contrasena')
-    const confirmField = getByLabelText('Confirmar contrasena')
+    const userField = await findByTestId('register-username')
+    const nameField = getByTestId('register-name')
+    const emailField = getByTestId('register-email')
+    const passwordField = getByTestId('register-password')
+    const confirmField = getByTestId('register-confirm-password')
 
     await user.type(userField, 'admin')
     await user.type(nameField, 'Admin ERP')
