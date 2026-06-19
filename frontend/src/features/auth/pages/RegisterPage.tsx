@@ -49,10 +49,12 @@ export function RegisterPage() {
       try {
         const data = await referenceData()
         if (!active) return
-        setCatalogs(data)
+        const nextCatalogs = data ?? null
+        setCatalogs(nextCatalogs)
+        const firstRoleId = nextCatalogs?.roles?.[0]?.id
         setValue((current) => ({
           ...current,
-          rolId: current.rolId || String(data.roles[0]?.id ?? ''),
+          rolId: current.rolId || (firstRoleId ? String(firstRoleId) : ''),
         }))
       } catch (caught) {
         if (active) {
