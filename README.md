@@ -104,3 +104,42 @@ Crear en GitHub un secret llamado `AZURE_DEVOPS_PAT` con un Personal Access Toke
 - Cada `push` a GitHub intenta publicar la misma rama o tag en Azure DevOps.
 - El repositorio destino es `https://dev.azure.com/erp-maquinarias1/ERP-COMPRAS/_git/ERP-COMPRAS`.
 - El flujo es unidireccional: GitHub es la fuente principal y Azure DevOps recibe el espejo.
+
+## Azure DevOps CI/CD
+
+El pipeline principal esta en [`azure-pipelines.yml`](./azure-pipelines.yml) y sigue este flujo:
+
+1. Validacion del codigo con `npm test` y `npm run build` en backend y frontend.
+2. Construccion y publicacion de la imagen del backend en Azure Container Registry.
+3. Construccion y publicacion de la imagen del frontend por entorno usando `VITE_API_URL`.
+4. Despliegue a `staging` y `production` en Azure App Service para contenedores.
+
+### Variable groups requeridos
+
+Crear estos grupos en Azure DevOps Library:
+
+- `erp1-shared`
+- `erp1-staging`
+- `erp1-production`
+
+### Variables esperadas
+
+En `erp1-shared`:
+
+- `ACR_SERVICE_CONNECTION`
+- `AZURE_SERVICE_CONNECTION`
+- `ACR_LOGIN_SERVER`
+- `ACR_USERNAME`
+- `ACR_PASSWORD`
+
+En `erp1-staging` y `erp1-production`:
+
+- `RESOURCE_GROUP`
+- `BACKEND_WEBAPP_NAME`
+- `FRONTEND_WEBAPP_NAME`
+- `BACKEND_PUBLIC_URL`
+- `FRONTEND_PUBLIC_URL`
+
+### Nota tecnica
+
+El frontend soporta `VITE_API_URL` en build time, por eso puede apuntar al backend de Azure sin depender del proxy local de Nginx.
