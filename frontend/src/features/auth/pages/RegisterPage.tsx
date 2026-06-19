@@ -12,9 +12,15 @@ const initialForm: RegisterFormValues = {
   username: '',
   nombreCompleto: '',
   email: '',
+  telefono: '',
   password: '',
   confirmPassword: '',
   rolId: '',
+}
+
+function composePhoneNumber(countryCode: string, phoneNumber: string): string {
+  const digits = phoneNumber.trim().replace(/[^\d]/g, '')
+  return digits ? `${countryCode}${digits}` : ''
 }
 
 export function RegisterPage() {
@@ -25,6 +31,8 @@ export function RegisterPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [value, setValue] = useState<RegisterFormValues>(initialForm)
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+591')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof RegisterFormValues, string>>>(
     {},
   )
@@ -78,6 +86,7 @@ export function RegisterPage() {
         username: value.username.trim(),
         nombreCompleto: value.nombreCompleto.trim(),
         email: value.email.trim(),
+        telefono: value.telefono.trim(),
         password: value.password,
         rolId: Number(value.rolId),
         twoFactorEnabled: true,
@@ -156,7 +165,23 @@ export function RegisterPage() {
                 value={value}
                 errors={fieldErrors}
                 error={error}
+                phoneCountryCode={phoneCountryCode}
+                phoneNumber={phoneNumber}
                 onChange={setValue}
+                onPhoneCountryCodeChange={(nextCountryCode) => {
+                  setPhoneCountryCode(nextCountryCode)
+                  setValue((current) => ({
+                    ...current,
+                    telefono: composePhoneNumber(nextCountryCode, phoneNumber),
+                  }))
+                }}
+                onPhoneNumberChange={(nextPhoneNumber) => {
+                  setPhoneNumber(nextPhoneNumber)
+                  setValue((current) => ({
+                    ...current,
+                    telefono: composePhoneNumber(phoneCountryCode, nextPhoneNumber),
+                  }))
+                }}
                 onSubmit={handleSubmit}
               />
             </Box>

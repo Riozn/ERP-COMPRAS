@@ -78,7 +78,7 @@ export type RegisterUserInput = {
   username: string
   nombreCompleto: string
   email: string
-  telefono?: string | null
+  telefono: string
   password: string
   rolId: number
   twoFactorEnabled?: boolean

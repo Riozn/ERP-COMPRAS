@@ -3,13 +3,19 @@ import { Alert, Box, Button, Chip, Divider, MenuItem, Paper, TextField, Typograp
 import type { ReferenceCatalogs } from '../../../core/auth/auth.types'
 import type { RegisterFormValues, FormErrors } from '../auth.validators'
 
+const countryCodes = ['+591', '+54', '+56', '+57', '+51', '+52', '+593', '+595', '+598']
+
 type Props = {
   loading: boolean
   catalogs: ReferenceCatalogs | null
   value: RegisterFormValues
   errors: FormErrors<RegisterFormValues>
   error: string | null
+  phoneCountryCode: string
+  phoneNumber: string
   onChange: (next: RegisterFormValues) => void
+  onPhoneCountryCodeChange: (value: string) => void
+  onPhoneNumberChange: (value: string) => void
   onSubmit: () => void
 }
 
@@ -19,7 +25,11 @@ export function RegisterForm({
   value,
   errors,
   error,
+  phoneCountryCode,
+  phoneNumber,
   onChange,
+  onPhoneCountryCodeChange,
+  onPhoneNumberChange,
   onSubmit,
 }: Props) {
   return (
@@ -43,7 +53,8 @@ export function RegisterForm({
             Crear cuenta
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-            Registra un nuevo usuario para acceder al sistema ERP.
+            Registra un nuevo usuario para acceder al sistema ERP. Pedimos WhatsApp para activar
+            2FA.
           </Typography>
         </Box>
 
@@ -78,6 +89,53 @@ export function RegisterForm({
             autoComplete="email"
             fullWidth
           />
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: errors.telefono ? 'error.main' : 'divider',
+              backgroundColor: 'action.hover',
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+              WhatsApp para 2FA
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.25 }}>
+              Este numero se usara para enviarte el codigo de acceso.
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: '140px 1fr' },
+                gap: 1.5,
+                mt: 2,
+              }}
+            >
+              <TextField
+                select
+                label="Pais"
+                value={phoneCountryCode}
+                onChange={(event) => onPhoneCountryCodeChange(event.target.value)}
+                fullWidth
+              >
+                {countryCodes.map((code) => (
+                  <MenuItem key={code} value={code}>
+                    {code}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                label="Numero de WhatsApp"
+                value={phoneNumber}
+                onChange={(event) => onPhoneNumberChange(event.target.value)}
+                error={Boolean(errors.telefono)}
+                helperText={errors.telefono ?? 'Ingresa solo el numero local, sin el prefijo.'}
+                autoComplete="tel"
+                fullWidth
+              />
+            </Box>
+          </Box>
           <TextField
             label="Contrasena"
             type="password"
@@ -113,11 +171,11 @@ export function RegisterForm({
               </MenuItem>
             ))}
           </TextField>
-
         </Box>
 
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Chip size="small" label="JWT" />
+          <Chip size="small" label="WhatsApp" />
           <Chip size="small" label="Acceso ERP" />
         </Box>
 

@@ -32,9 +32,9 @@ export function createAuthRoutes(
       ? req.body.twoFactorEnabled
       : req.body?.twoFactorEnabled === 'true'
 
-    if (!username || !nombreCompleto || !email || !password || !Number.isFinite(rolId)) {
+    if (!username || !nombreCompleto || !email || !telefono || !password || !Number.isFinite(rolId)) {
       throw new ValidationError(
-        'username, nombreCompleto, email, password y rolId son obligatorios.',
+        'username, nombreCompleto, email, telefono, password y rolId son obligatorios.',
       )
     }
 
@@ -42,7 +42,7 @@ export function createAuthRoutes(
       username,
       nombreCompleto,
       email,
-      telefono: telefono || null,
+      telefono,
       password,
       rolId,
       twoFactorEnabled,

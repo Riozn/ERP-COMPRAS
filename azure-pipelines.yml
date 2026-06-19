@@ -112,10 +112,12 @@ stages:
                 set -euo pipefail
                 acrName="${ACR_LOGIN_SERVER%%.*}"
                 az acr login --name "$acrName"
+                backendPublicUrl="${BACKEND_PUBLIC_URL:-https://${BACKEND_WEBAPP_NAME}.azurewebsites.net}"
+                backendPublicUrl="${backendPublicUrl%/}"
 
                 docker build \
                   -f frontend/Dockerfile \
-                  --build-arg VITE_API_URL="https://$(BACKEND_WEBAPP_NAME).azurewebsites.net" \
+                  --build-arg VITE_API_URL="$backendPublicUrl/api" \
                   -t "$(ACR_LOGIN_SERVER)/$(frontendImageName):$(backendImageTag)" \
                   -t "$(ACR_LOGIN_SERVER)/$(frontendImageName):latest" \
                   ./frontend
@@ -131,6 +133,8 @@ stages:
               scriptLocation: inlineScript
               inlineScript: |
                 set -euo pipefail
+                frontendPublicUrl="${FRONTEND_PUBLIC_URL:-https://${FRONTEND_WEBAPP_NAME}.azurewebsites.net}"
+                frontendPublicUrl="${frontendPublicUrl%/}"
 
                 az webapp config container set \
                   --resource-group "$(RESOURCE_GROUP)" \
@@ -147,7 +151,13 @@ stages:
                   PORT=3001 \
                   WEBSITES_PORT=3001 \
                   NODE_ENV=production \
-                  CORS_ORIGINS="https://$(FRONTEND_WEBAPP_NAME).azurewebsites.net" \
+                  DATABASE_URL="$(DATABASE_URL)" \
+                  JWT_SECRET="$(JWT_SECRET)" \
+                  JWT_ACCESS_TOKEN_EXPIRES_IN="15m" \
+                  REFRESH_TOKEN_EXPIRES_DAYS="30" \
+                  TWO_FACTOR_DEFAULT_CHANNEL="EMAIL" \
+                  EXPOSE_2FA_CODE="false" \
+                  CORS_ORIGINS="$frontendPublicUrl" \
                   CORS_ALLOW_CREDENTIALS=false
 
                 az webapp config container set \

@@ -11,6 +11,7 @@ export type RegisterFormValues = {
   username: string
   nombreCompleto: string
   email: string
+  telefono: string
   password: string
   confirmPassword: string
   rolId: string
@@ -57,6 +58,10 @@ export function validateRegisterForm(values: RegisterFormValues): FormErrors<Reg
     errors.email = 'Ingresa un correo.'
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
     errors.email = 'Ingresa un correo valido.'
+  }
+
+  if (!values.telefono.trim()) {
+    errors.telefono = 'Ingresa tu numero de WhatsApp.'
   }
 
   if (values.password.length < 8) {

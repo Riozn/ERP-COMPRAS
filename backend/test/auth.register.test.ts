@@ -10,6 +10,7 @@ test('auth register creates a session and records onboarding side effects', asyn
     username: 'jdoe',
     nombreCompleto: 'John Doe',
     email: 'john@erp.test',
+    telefono: '+59170000123',
     password: 'Secret123!',
     rolId: 1,
     userAgent: 'test-agent',

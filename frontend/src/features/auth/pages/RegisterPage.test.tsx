@@ -73,6 +73,52 @@ describe('RegisterPage', () => {
     const userField = await findByLabelText('Usuario')
     const nameField = getByLabelText('Nombre completo')
     const emailField = getByLabelText('Correo')
+    const phoneField = getByLabelText('Numero de WhatsApp')
+    const passwordField = getByLabelText('Contrasena')
+    const confirmField = getByLabelText('Confirmar contrasena')
+
+    await user.type(userField, 'admin')
+    await user.type(nameField, 'Admin ERP')
+    await user.type(emailField, 'admin@erp.test')
+    await user.type(phoneField, '70000123')
+    await user.type(passwordField, 'secret123')
+    await user.type(confirmField, 'secret123')
+    await user.click(getByRole('button', { name: 'Crear cuenta' }))
+
+    expect(authMock.referenceData).toHaveBeenCalledTimes(1)
+    expect(authMock.register).toHaveBeenCalledWith({
+      username: 'admin',
+      nombreCompleto: 'Admin ERP',
+      email: 'admin@erp.test',
+      telefono: '+59170000123',
+      password: 'secret123',
+      rolId: 1,
+      twoFactorEnabled: true,
+    })
+  })
+
+  it('shows validation when WhatsApp number is missing', async () => {
+    const user = userEvent.setup()
+
+    authMock.referenceData.mockResolvedValueOnce({
+      monedas: [],
+      almacenes: [],
+      impuestos: [],
+      gruposArticulo: [],
+      estadosDocumento: [],
+      tiposDocumento: [],
+      roles: [{ id: 1, codigo: 'ADMIN', nombre: 'Administrador' }],
+    })
+
+    const { findByLabelText, getByLabelText, getByRole, findByText } = renderWithTheme(
+      <MemoryRouter initialEntries={['/register']}>
+        <RegisterPage />
+      </MemoryRouter>,
+    )
+
+    const userField = await findByLabelText('Usuario')
+    const nameField = getByLabelText('Nombre completo')
+    const emailField = getByLabelText('Correo')
     const passwordField = getByLabelText('Contrasena')
     const confirmField = getByLabelText('Confirmar contrasena')
 
@@ -83,14 +129,7 @@ describe('RegisterPage', () => {
     await user.type(confirmField, 'secret123')
     await user.click(getByRole('button', { name: 'Crear cuenta' }))
 
-    expect(authMock.referenceData).toHaveBeenCalledTimes(1)
-    expect(authMock.register).toHaveBeenCalledWith({
-      username: 'admin',
-      nombreCompleto: 'Admin ERP',
-      email: 'admin@erp.test',
-      password: 'secret123',
-      rolId: 1,
-      twoFactorEnabled: true,
-    })
+    await findByText('Ingresa tu numero de WhatsApp.')
+    expect(authMock.register).not.toHaveBeenCalled()
   })
 })

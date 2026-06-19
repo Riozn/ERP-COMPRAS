@@ -130,10 +130,18 @@ En `erp1-shared`:
 - `RESOURCE_GROUP`
 - `BACKEND_WEBAPP_NAME`
 - `FRONTEND_WEBAPP_NAME`
+- `DATABASE_URL`
+- `JWT_SECRET`
+
+Opcionales si quieres sobrescribir las URLs publicas por defecto:
+
+- `BACKEND_PUBLIC_URL`
+- `FRONTEND_PUBLIC_URL`
 
 ### Nota tecnica
 
-El frontend soporta `VITE_API_URL` en build time, por eso puede apuntar al backend de Azure sin depender del proxy local de Nginx. En este primer flujo, la URL se calcula desde el nombre del App Service backend.
+El frontend soporta `VITE_API_URL` en build time, por eso puede apuntar al backend de Azure sin depender del proxy local de Nginx. En este flujo la URL se calcula desde el nombre del App Service backend, salvo que definas `BACKEND_PUBLIC_URL`.
+El backend recibe `CORS_ORIGINS` con la URL publica del frontend y, si no defines `FRONTEND_PUBLIC_URL`, el pipeline usa el nombre del App Service frontend.
 El backend escucha en `0.0.0.0` y en Azure App Service se fija `WEBSITES_PORT=3001` para que el contenedor y la plataforma hablen el mismo puerto.
 
 ### Checklist rapido para Azure DevOps
@@ -141,7 +149,7 @@ El backend escucha en `0.0.0.0` y en Azure App Service se fija `WEBSITES_PORT=30
 1. Crear un proyecto en Azure DevOps y conectar el repositorio.
 2. Crear el Service Connection hacia Azure Subscription con el nombre `AzureServiceConnectionERP`.
 3. Crear el variable group `erp1-shared`.
-4. Cargar los secretos y nombres reales de recursos en ese grupo.
+4. Cargar los secretos, URLs publicas opcionales y nombres reales de recursos en ese grupo.
 5. Verificar que existan los App Services para backend y frontend.
 6. Ejecutar el pipeline sobre una rama `main` o `master`.
 7. Confirmar que el stage `Validate` pase antes de desplegar.
