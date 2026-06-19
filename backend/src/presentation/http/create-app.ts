@@ -119,6 +119,15 @@ export function createApp() {
   )
   app.use(express.json({ limit: '1mb' }))
 
+  app.get('/', (_req, res) => {
+    res.json({
+      success: true,
+      service: 'ERP1 API',
+      status: 'ok',
+      health: '/api/health',
+    })
+  })
+
   app.use('/api', createHealthRoutes(healthService))
   app.use('/api/auth', createAuthRoutes(authService, tokenService))
   app.use('/api/catalogs', createCatalogRoutes(catalogService))

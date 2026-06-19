@@ -12,7 +12,7 @@ async function bootstrap(): Promise<void> {
 
   const app = createApp()
 
-  app.listen(env.server.port, () => {
+  app.listen(env.server.port, '0.0.0.0', () => {
     console.log(`[api] listening on http://localhost:${env.server.port}`)
   })
 }

@@ -111,35 +111,39 @@ El pipeline principal esta en [`azure-pipelines.yml`](./azure-pipelines.yml) y s
 
 1. Validacion del codigo con `npm test` y `npm run build` en backend y frontend.
 2. Construccion y publicacion de la imagen del backend en Azure Container Registry.
-3. Construccion y publicacion de la imagen del frontend por entorno usando `VITE_API_URL`.
-4. Despliegue a `staging` y `production` en Azure App Service para contenedores.
+3. Construccion y publicacion de la imagen del frontend usando `VITE_API_URL`.
+4. Despliegue al entorno actual en Azure App Service para contenedores.
 
 ### Variable groups requeridos
 
-Crear estos grupos en Azure DevOps Library:
+Crear este grupo en Azure DevOps Library:
 
 - `erp1-shared`
-- `erp1-staging`
-- `erp1-production`
 
 ### Variables esperadas
 
 En `erp1-shared`:
 
-- `ACR_SERVICE_CONNECTION`
 - `AZURE_SERVICE_CONNECTION`
 - `ACR_LOGIN_SERVER`
 - `ACR_USERNAME`
 - `ACR_PASSWORD`
-
-En `erp1-staging` y `erp1-production`:
-
 - `RESOURCE_GROUP`
 - `BACKEND_WEBAPP_NAME`
 - `FRONTEND_WEBAPP_NAME`
-- `BACKEND_PUBLIC_URL`
-- `FRONTEND_PUBLIC_URL`
 
 ### Nota tecnica
 
-El frontend soporta `VITE_API_URL` en build time, por eso puede apuntar al backend de Azure sin depender del proxy local de Nginx.
+El frontend soporta `VITE_API_URL` en build time, por eso puede apuntar al backend de Azure sin depender del proxy local de Nginx. En este primer flujo, la URL se calcula desde el nombre del App Service backend.
+El backend escucha en `0.0.0.0` y en Azure App Service se fija `WEBSITES_PORT=3001` para que el contenedor y la plataforma hablen el mismo puerto.
+
+### Checklist rapido para Azure DevOps
+
+1. Crear un proyecto en Azure DevOps y conectar el repositorio.
+2. Crear el Service Connection hacia Azure Subscription.
+3. Crear el variable group `erp1-shared`.
+4. Cargar los secretos y nombres reales de recursos en ese grupo.
+5. Verificar que existan los App Services para backend y frontend.
+6. Ejecutar el pipeline sobre una rama `main` o `master`.
+7. Confirmar que el stage `Validate` pase antes de desplegar.
+8. Revisar los logs de `AzureCLI@2` si el App Service no toma la nueva imagen.

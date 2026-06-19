@@ -59,7 +59,7 @@ stages:
   - stage: BuildBackendImage
     displayName: Build and push backend image
     dependsOn: Validate
-    condition: succeeded()
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     jobs:
       - job: BuildBackend
         displayName: Build backend container
@@ -69,190 +69,105 @@ stages:
           - checkout: self
             fetchDepth: 0
 
-          - task: Docker@2
-            displayName: Login to ACR
-            inputs:
-              command: login
-              containerRegistry: $(ACR_SERVICE_CONNECTION)
-
-          - task: Docker@2
+          - task: AzureCLI@2
             displayName: Build and push backend image
             inputs:
-              command: buildAndPush
-              containerRegistry: $(ACR_SERVICE_CONNECTION)
-              repository: $(backendImageName)
-              dockerfile: backend/Dockerfile
-              buildContext: .
-              tags: |
-                $(backendImageTag)
-                latest
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                acrName="${ACR_LOGIN_SERVER%%.*}"
+                az acr login --name "$acrName"
 
-  - stage: DeployStaging
-    displayName: Deploy to staging
+                docker build \
+                  -f backend/Dockerfile \
+                  -t "$(ACR_LOGIN_SERVER)/$(backendImageName):$(backendImageTag)" \
+                  -t "$(ACR_LOGIN_SERVER)/$(backendImageName):latest" \
+                  .
+
+                docker push "$(ACR_LOGIN_SERVER)/$(backendImageName):$(backendImageTag)"
+                docker push "$(ACR_LOGIN_SERVER)/$(backendImageName):latest"
+
+  - stage: DeployCurrent
+    displayName: Deploy to current environment
     dependsOn: BuildBackendImage
-    condition: succeeded()
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     jobs:
-      - deployment: DeployStaging
-        displayName: Staging deployment
-        environment: erp1-staging
-        variables:
-          - group: erp1-staging
+      - job: DeployCurrent
+        displayName: Deploy backend and frontend
         pool:
           vmImage: ubuntu-latest
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                  fetchDepth: 0
+        steps:
+          - checkout: self
+            fetchDepth: 0
 
-                - task: Docker@2
-                  displayName: Login to ACR
-                  inputs:
-                    command: login
-                    containerRegistry: $(ACR_SERVICE_CONNECTION)
+          - task: AzureCLI@2
+            displayName: Build and push frontend image
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                acrName="${ACR_LOGIN_SERVER%%.*}"
+                az acr login --name "$acrName"
 
-                - script: |
-                    set -euo pipefail
-                    docker build \
-                      -f frontend/Dockerfile \
-                      --build-arg VITE_API_URL="$(BACKEND_PUBLIC_URL)" \
-                      -t "$(ACR_LOGIN_SERVER)/$(frontendImageName):$(backendImageTag)-staging" \
-                      -t "$(ACR_LOGIN_SERVER)/$(frontendImageName):staging-latest" \
-                      ./frontend
-                    docker push "$(ACR_LOGIN_SERVER)/$(frontendImageName):$(backendImageTag)-staging"
-                    docker push "$(ACR_LOGIN_SERVER)/$(frontendImageName):staging-latest"
-                  displayName: Build and push staging frontend image
+                docker build \
+                  -f frontend/Dockerfile \
+                  --build-arg VITE_API_URL="https://$(BACKEND_WEBAPP_NAME).azurewebsites.net" \
+                  -t "$(ACR_LOGIN_SERVER)/$(frontendImageName):$(backendImageTag)" \
+                  -t "$(ACR_LOGIN_SERVER)/$(frontendImageName):latest" \
+                  ./frontend
 
-                - task: AzureCLI@2
-                  displayName: Deploy backend and frontend to staging App Service
-                  inputs:
-                    azureSubscription: $(AZURE_SERVICE_CONNECTION)
-                    scriptType: bash
-                    scriptLocation: inlineScript
-                    inlineScript: |
-                      set -euo pipefail
+                docker push "$(ACR_LOGIN_SERVER)/$(frontendImageName):$(backendImageTag)"
+                docker push "$(ACR_LOGIN_SERVER)/$(frontendImageName):latest"
 
-                      az webapp config container set \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(BACKEND_WEBAPP_NAME)" \
-                        --container-image-name "$(ACR_LOGIN_SERVER)/$(backendImageName):$(backendImageTag)" \
-                        --docker-registry-server-url "https://$(ACR_LOGIN_SERVER)" \
-                        --docker-registry-server-user "$(ACR_USERNAME)" \
-                        --docker-registry-server-password "$(ACR_PASSWORD)"
+          - task: AzureCLI@2
+            displayName: Deploy backend and frontend to App Service
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
 
-                      az webapp config appsettings set \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(BACKEND_WEBAPP_NAME)" \
-                        --settings \
-                        PORT=3001 \
-                        NODE_ENV=production \
-                        CORS_ORIGINS="$(FRONTEND_PUBLIC_URL)" \
-                        CORS_ALLOW_CREDENTIALS=false
+                az webapp config container set \
+                  --resource-group "$(RESOURCE_GROUP)" \
+                  --name "$(BACKEND_WEBAPP_NAME)" \
+                  --container-image-name "$(ACR_LOGIN_SERVER)/$(backendImageName):$(backendImageTag)" \
+                  --docker-registry-server-url "https://$(ACR_LOGIN_SERVER)" \
+                  --docker-registry-server-user "$(ACR_USERNAME)" \
+                  --docker-registry-server-password "$(ACR_PASSWORD)"
 
-                      az webapp config container set \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(FRONTEND_WEBAPP_NAME)" \
-                        --container-image-name "$(ACR_LOGIN_SERVER)/$(frontendImageName):$(backendImageTag)-staging" \
-                        --docker-registry-server-url "https://$(ACR_LOGIN_SERVER)" \
-                        --docker-registry-server-user "$(ACR_USERNAME)" \
-                        --docker-registry-server-password "$(ACR_PASSWORD)"
+                az webapp config appsettings set \
+                  --resource-group "$(RESOURCE_GROUP)" \
+                  --name "$(BACKEND_WEBAPP_NAME)" \
+                  --settings \
+                  PORT=3001 \
+                  WEBSITES_PORT=3001 \
+                  NODE_ENV=production \
+                  CORS_ORIGINS="https://$(FRONTEND_WEBAPP_NAME).azurewebsites.net" \
+                  CORS_ALLOW_CREDENTIALS=false
 
-                      az webapp config appsettings set \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(FRONTEND_WEBAPP_NAME)" \
-                        --settings \
-                        WEBSITES_PORT=80
+                az webapp config container set \
+                  --resource-group "$(RESOURCE_GROUP)" \
+                  --name "$(FRONTEND_WEBAPP_NAME)" \
+                  --container-image-name "$(ACR_LOGIN_SERVER)/$(frontendImageName):$(backendImageTag)" \
+                  --docker-registry-server-url "https://$(ACR_LOGIN_SERVER)" \
+                  --docker-registry-server-user "$(ACR_USERNAME)" \
+                  --docker-registry-server-password "$(ACR_PASSWORD)"
 
-                      az webapp restart \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(BACKEND_WEBAPP_NAME)"
+                az webapp config appsettings set \
+                  --resource-group "$(RESOURCE_GROUP)" \
+                  --name "$(FRONTEND_WEBAPP_NAME)" \
+                  --settings \
+                  WEBSITES_PORT=80
 
-                      az webapp restart \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(FRONTEND_WEBAPP_NAME)"
+                az webapp restart \
+                  --resource-group "$(RESOURCE_GROUP)" \
+                  --name "$(BACKEND_WEBAPP_NAME)"
 
-  - stage: DeployProduction
-    displayName: Deploy to production
-    dependsOn: DeployStaging
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-    jobs:
-      - deployment: DeployProduction
-        displayName: Production deployment
-        environment: erp1-production
-        variables:
-          - group: erp1-production
-        pool:
-          vmImage: ubuntu-latest
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                  fetchDepth: 0
-
-                - task: Docker@2
-                  displayName: Login to ACR
-                  inputs:
-                    command: login
-                    containerRegistry: $(ACR_SERVICE_CONNECTION)
-
-                - script: |
-                    set -euo pipefail
-                    docker build \
-                      -f frontend/Dockerfile \
-                      --build-arg VITE_API_URL="$(BACKEND_PUBLIC_URL)" \
-                      -t "$(ACR_LOGIN_SERVER)/$(frontendImageName):$(backendImageTag)-production" \
-                      -t "$(ACR_LOGIN_SERVER)/$(frontendImageName):production-latest" \
-                      ./frontend
-                    docker push "$(ACR_LOGIN_SERVER)/$(frontendImageName):$(backendImageTag)-production"
-                    docker push "$(ACR_LOGIN_SERVER)/$(frontendImageName):production-latest"
-                  displayName: Build and push production frontend image
-
-                - task: AzureCLI@2
-                  displayName: Deploy backend and frontend to production App Service
-                  inputs:
-                    azureSubscription: $(AZURE_SERVICE_CONNECTION)
-                    scriptType: bash
-                    scriptLocation: inlineScript
-                    inlineScript: |
-                      set -euo pipefail
-
-                      az webapp config container set \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(BACKEND_WEBAPP_NAME)" \
-                        --container-image-name "$(ACR_LOGIN_SERVER)/$(backendImageName):$(backendImageTag)" \
-                        --docker-registry-server-url "https://$(ACR_LOGIN_SERVER)" \
-                        --docker-registry-server-user "$(ACR_USERNAME)" \
-                        --docker-registry-server-password "$(ACR_PASSWORD)"
-
-                      az webapp config appsettings set \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(BACKEND_WEBAPP_NAME)" \
-                        --settings \
-                        PORT=3001 \
-                        NODE_ENV=production \
-                        CORS_ORIGINS="$(FRONTEND_PUBLIC_URL)" \
-                        CORS_ALLOW_CREDENTIALS=false
-
-                      az webapp config container set \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(FRONTEND_WEBAPP_NAME)" \
-                        --container-image-name "$(ACR_LOGIN_SERVER)/$(frontendImageName):$(backendImageTag)-production" \
-                        --docker-registry-server-url "https://$(ACR_LOGIN_SERVER)" \
-                        --docker-registry-server-user "$(ACR_USERNAME)" \
-                        --docker-registry-server-password "$(ACR_PASSWORD)"
-
-                      az webapp config appsettings set \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(FRONTEND_WEBAPP_NAME)" \
-                        --settings \
-                        WEBSITES_PORT=80
-
-                      az webapp restart \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(BACKEND_WEBAPP_NAME)"
-
-                      az webapp restart \
-                        --resource-group "$(RESOURCE_GROUP)" \
-                        --name "$(FRONTEND_WEBAPP_NAME)"
+                az webapp restart \
+                  --resource-group "$(RESOURCE_GROUP)" \
+                  --name "$(FRONTEND_WEBAPP_NAME)"
