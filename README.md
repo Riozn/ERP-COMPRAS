@@ -124,7 +124,6 @@ Crear este grupo en Azure DevOps Library:
 
 En `erp1-shared`:
 
-- `AZURE_SERVICE_CONNECTION`
 - `ACR_LOGIN_SERVER`
 - `ACR_USERNAME`
 - `ACR_PASSWORD`
@@ -140,7 +139,7 @@ El backend escucha en `0.0.0.0` y en Azure App Service se fija `WEBSITES_PORT=30
 ### Checklist rapido para Azure DevOps
 
 1. Crear un proyecto en Azure DevOps y conectar el repositorio.
-2. Crear el Service Connection hacia Azure Subscription.
+2. Crear el Service Connection hacia Azure Subscription con el nombre `AzureServiceConnectionERP`.
 3. Crear el variable group `erp1-shared`.
 4. Cargar los secretos y nombres reales de recursos en ese grupo.
 5. Verificar que existan los App Services para backend y frontend.

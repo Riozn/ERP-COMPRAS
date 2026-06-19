@@ -72,7 +72,7 @@ stages:
           - task: AzureCLI@2
             displayName: Build and push backend image
             inputs:
-              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              azureSubscription: AzureServiceConnectionERP
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -105,7 +105,7 @@ stages:
           - task: AzureCLI@2
             displayName: Build and push frontend image
             inputs:
-              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              azureSubscription: AzureServiceConnectionERP
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -126,7 +126,7 @@ stages:
           - task: AzureCLI@2
             displayName: Deploy backend and frontend to App Service
             inputs:
-              azureSubscription: $(AZURE_SERVICE_CONNECTION)
+              azureSubscription: AzureServiceConnectionERP
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
