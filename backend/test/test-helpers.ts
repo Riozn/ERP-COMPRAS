@@ -6,6 +6,11 @@ process.env.TWO_FACTOR_CHALLENGE_EXPIRES_MINUTES =
 process.env.EXPOSE_2FA_CODE = process.env.EXPOSE_2FA_CODE ?? 'false'
 process.env.TWO_FACTOR_DEFAULT_CHANNEL =
   process.env.TWO_FACTOR_DEFAULT_CHANNEL ?? 'WHATSAPP'
+process.env.TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID ?? 'AC00000000000000000000000000000000'
+process.env.TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN ?? 'test-token'
+process.env.TWILIO_FROM_PHONE = process.env.TWILIO_FROM_PHONE ?? '+15550000000'
+process.env.TWILIO_WHATSAPP_CONTENT_SID =
+  process.env.TWILIO_WHATSAPP_CONTENT_SID ?? 'HX00000000000000000000000000000000'
 
 const [{ AuthApplicationService }, { UserApplicationService }] = await Promise.all([
   import('../src/application/auth/auth.service.js'),
@@ -326,7 +331,7 @@ class MemoryAuthRepository {
   async createTwoFactorCode(input: {
     usuarioId: string
     codigoHash: string
-    canal: 'EMAIL'
+    canal: 'EMAIL' | 'WHATSAPP'
     expiresAt: Date
   }): Promise<void> {
     const code: StoredTwoFactorCode = {
