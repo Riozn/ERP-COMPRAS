@@ -90,3 +90,17 @@ Servicios expuestos:
 - PostgreSQL: interno en la red de Docker
 
 El frontend usa Nginx como servidor estatico y proxyea `/api` hacia el backend.
+
+## Sincronizacion GitHub -> Azure DevOps
+
+El repositorio incluye un workflow de GitHub Actions en [`.github/workflows/mirror-to-azure-devops.yml`](./.github/workflows/mirror-to-azure-devops.yml) para reflejar cada `push` hacia Azure DevOps.
+
+### Requisito
+
+Crear en GitHub un secret llamado `AZURE_DEVOPS_PAT` con un Personal Access Token de Azure DevOps que tenga permiso de `Code (Read & write)` sobre el repositorio destino.
+
+### Comportamiento
+
+- Cada `push` a GitHub intenta publicar la misma rama o tag en Azure DevOps.
+- El repositorio destino es `https://dev.azure.com/erp-maquinarias1/ERP-COMPRAS/_git/ERP-COMPRAS`.
+- El flujo es unidireccional: GitHub es la fuente principal y Azure DevOps recibe el espejo.
