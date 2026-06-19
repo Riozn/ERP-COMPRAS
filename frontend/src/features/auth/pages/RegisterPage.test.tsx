@@ -48,7 +48,7 @@ describe('RegisterPage', () => {
       updatedAt: '2026-06-17T00:00:00.000Z',
     }
 
-    authMock.referenceData.mockResolvedValueOnce({
+    authMock.referenceData.mockResolvedValue({
       monedas: [],
       almacenes: [],
       impuestos: [],
@@ -100,7 +100,7 @@ describe('RegisterPage', () => {
   it('shows validation when WhatsApp number is missing', async () => {
     const user = userEvent.setup()
 
-    authMock.referenceData.mockResolvedValueOnce({
+    authMock.referenceData.mockResolvedValue({
       monedas: [],
       almacenes: [],
       impuestos: [],
