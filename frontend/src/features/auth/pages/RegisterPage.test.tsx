@@ -116,13 +116,12 @@ describe('RegisterPage', () => {
       </MemoryRouter>,
     )
 
-    const userField = await findByTestId('register-username')
     const nameField = getByTestId('register-name')
     const emailField = getByTestId('register-email')
     const passwordField = getByTestId('register-password')
     const confirmField = getByTestId('register-confirm-password')
 
-    await user.type(userField, 'admin')
+    
     await user.type(nameField, 'Admin ERP')
     await user.type(emailField, 'admin@erp.test')
     await user.type(passwordField, 'secret123')
