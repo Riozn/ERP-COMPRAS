@@ -185,7 +185,14 @@ export function RegisterForm({
           <Chip size="small" label="Acceso ERP" />
         </Box>
 
-        <Button variant="contained" size="large" onClick={onSubmit} disabled={loading} fullWidth>
+        <Button
+          variant="contained"
+          color="success"
+          size="large"
+          onClick={onSubmit}
+          disabled={loading}
+          fullWidth
+        >
           {loading ? 'Creando...' : 'Crear cuenta'}
         </Button>
 
